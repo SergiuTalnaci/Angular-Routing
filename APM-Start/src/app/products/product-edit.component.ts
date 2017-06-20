@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { MessageService } from '../messages/message.service';
 
@@ -9,20 +10,33 @@ import { ProductService } from './product.service';
     templateUrl: './app/products/product-edit.component.html',
     styleUrls: ['./app/products/product-edit.component.css']
 })
-export class ProductEditComponent {
+export class ProductEditComponent implements OnInit {
     pageTitle: string = 'Product Edit';
     errorMessage: string;
 
     product: IProduct;
 
     constructor(private productService: ProductService,
-                private messageService: MessageService) { }
+        private messageService: MessageService,
+        private actiavtedRoute: ActivatedRoute,
+        private router: Router) { }
+
+    ngOnInit(): void {
+        //Ang 4
+        this.actiavtedRoute.paramMap.subscribe(
+            params => {
+                let id = +params.get('id');
+                //Gets called every time there is a change
+                this.getProduct(id);
+            }
+        );
+    }
 
     getProduct(id: number): void {
         this.productService.getProduct(id)
             .subscribe(
-                (product: IProduct) => this.onProductRetrieved(product),
-                (error: any) => this.errorMessage = <any>error
+            (product: IProduct) => this.onProductRetrieved(product),
+            (error: any) => this.errorMessage = <any>error
             );
     }
 
@@ -40,13 +54,14 @@ export class ProductEditComponent {
         if (this.product.id === 0) {
             // Don't delete, it was never saved.
             this.onSaveComplete();
-       } else {
+        } else {
             if (confirm(`Really delete the product: ${this.product.productName}?`)) {
                 this.productService.deleteProduct(this.product.id)
                     .subscribe(
-                        () => this.onSaveComplete(`${this.product.productName} was deleted`),
-                        (error: any) => this.errorMessage = <any>error
+                    () => this.onSaveComplete(`${this.product.productName} was deleted`),
+                    (error: any) => this.errorMessage = <any>error
                     );
+                this.router.navigate(['/products']);
             }
         }
     }
@@ -55,9 +70,10 @@ export class ProductEditComponent {
         if (true === true) {
             this.productService.saveProduct(this.product)
                 .subscribe(
-                    () => this.onSaveComplete(`${this.product.productName} was saved`),
-                    (error: any) => this.errorMessage = <any>error
+                () => this.onSaveComplete(`${this.product.productName} was saved`),
+                (error: any) => this.errorMessage = <any>error
                 );
+            this.router.navigate(['/products']);
         } else {
             this.errorMessage = 'Please correct the validation errors.';
         }
